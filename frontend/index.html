@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DocIntel AI — Precision Document Intelligence & Analysis</title>
+
+<!-- Standard SEO Meta Tags -->
+<meta name="description" content="Turn dense paperwork into decisions you can act on. Upload government forms, insurance policies, or legal contracts to extract deadlines, fees, eligibility criteria, and get citation-backed answers.">
+<meta name="keywords" content="document intelligence, pdf summary, contract analysis, ai document search, rag, legal tech, fast document extraction">
+<meta name="author" content="DocIntel AI">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Social Sharing (Facebook, LinkedIn, WhatsApp) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="DocIntel AI — Precision Document Intelligence">
+<meta property="og:description" content="Upload any PDF to extract deadlines, fees, eligibility criteria, and ask grounded questions with exact page citations.">
+<meta property="og:site_name" content="DocIntel AI">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="DocIntel AI — Precision Document Intelligence">
+<meta name="twitter:description" content="Upload any PDF to extract structured intelligence and perform citation-grounded Q&A.">
+
+<!-- Google Rich Snippets (Schema.org JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "DocIntel AI",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "All",
+  "description": "Automated document ingestion, AI-driven extraction, and grounded question answering with page-level citations."
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- PDF.js library for high-fidelity client-side fallback parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+<style>
+  :root{
+    --ink:#1c2430; --ink-soft:#4a5468; --paper:#e7dfc8; --paper-card:#f7f3e7;
+    --stamp:#a63a28; --stamp-deep:#832c1e; --verified:#2e6b5a; --highlight:#f0c743; --line:#c9bd9c;
+    --shadow: rgba(28,36,48,.35); --grain-opacity:.05;
+    --font-display:'Newsreader', Georgia, serif; --font-body:'Public Sans', sans-serif; --font-mono:'IBM Plex Mono', monospace;
+    --container:1180px;
+  }
+  :root[data-theme="dark"]{
+    --ink:#eee6d3; --ink-soft:#b7ae98; --paper:#161311; --paper-card:#211d19;
+    --stamp:#e0684f; --stamp-deep:#c94f36; --verified:#5fae96; --highlight:#e0b73f; --line:#3a342c;
+    --shadow: rgba(0,0,0,.6); --grain-opacity:.08;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); line-height:1.5; -webkit-font-smoothing:antialiased; transition:background .25s ease, color .25s ease; }
+  img,svg{ display:block; max-width:100%; }
+  a{ color:inherit; }
+  h1,h2,h3,h4{ font-family:var(--font-display); font-weight:500; margin:0; }
+  p{ margin:0; }
+  :focus-visible{ outline:2px solid var(--stamp); outline-offset:3px; }
+  .container{ width:100%; max-width:var(--container); margin:0 auto; padding:0 1.5rem; }
+  .eyebrow{ font-family:var(--font-mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--stamp-deep); font-weight:500; }
+  .section{ padding:5.5rem 0; }
+  .section-head{ max-width:640px; margin-bottom:3rem; }
+  .section-head h2{ font-size:clamp(1.75rem,3vw,2.5rem); margin-top:.6rem; line-height:1.15; }
+
+  .btn{ display:inline-flex; align-items:center; gap:.5rem; font-family:var(--font-body); font-weight:600; font-size:.95rem; padding:.85rem 1.5rem; border-radius:3px; text-decoration:none; cursor:pointer; border:1px solid transparent; transition:transform .1s ease, box-shadow .1s ease; }
+  .btn--primary{ background:var(--stamp); color:var(--paper-card); }
+  .btn--primary:hover{ transform:translateY(-1px); box-shadow:0 6px 0 0 var(--stamp-deep); }
+  .btn--primary:active{ transform:translateY(3px) scale(.98); box-shadow:0 2px 0 0 var(--stamp-deep); }
+  .btn--ghost{ background:transparent; color:var(--ink); border-color:var(--ink); }
+  .btn--ghost:hover{ background:var(--ink); color:var(--paper); }
+  .btn--ghost:active{ transform:scale(.97); }
+
+  .theme-toggle{ display:flex; align-items:center; gap:.4rem; background:none; border:1px solid var(--line); border-radius:20px; padding:.4rem .7rem; cursor:pointer; font-family:var(--font-mono); font-size:.7rem; color:var(--ink-soft); }
+  .theme-toggle:active{ transform:scale(.95); }
+
+  .nav{ position:sticky; top:0; z-index:50; background:color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); }
+  .nav__row{ display:flex; align-items:center; justify-content:space-between; padding:.9rem 0; }
+  .brand{ display:flex; align-items:center; gap:.55rem; font-family:var(--font-display); font-size:1.15rem; font-weight:600; text-decoration:none; color:var(--ink); }
+  .nav__links{ display:flex; align-items:center; gap:2rem; list-style:none; margin:0; padding:0; }
+  .nav__links a{ text-decoration:none; font-size:.92rem; color:var(--ink-soft); font-weight:500; }
+  .nav__links a:hover{ color:var(--ink); }
+  .nav__cta{ display:flex; align-items:center; gap:1.25rem; }
+  @media (max-width:760px){ .nav__links{ display:none; } }
+
+  .hero{ padding:4.5rem 0 5rem; }
+  .hero__grid{ display:grid; grid-template-columns:1.05fr 1fr; gap:3.5rem; align-items:center; }
+  @media (max-width:900px){ .hero__grid{ grid-template-columns:1fr; } }
+  .hero h1{ font-size:clamp(2.4rem,4.4vw,3.6rem); line-height:1.08; margin-top:.75rem; letter-spacing:-.01em; }
+  .hero__sub{ font-size:1.1rem; color:var(--ink-soft); margin-top:1.4rem; max-width:46ch; line-height:1.6; }
+  .hero__ctas{ display:flex; gap:1rem; margin-top:2.2rem; flex-wrap:wrap; }
+
+  .doc-wrap{ position:relative; perspective:1200px; }
+  .doc-card{
+    position:relative; background:var(--paper-card); border:1px solid var(--line); border-radius:4px;
+    padding:1.9rem 1.9rem 2.1rem; box-shadow:0 22px 40px -18px var(--shadow);
+    transform:rotate(-1.4deg); transition:box-shadow .15s ease;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(120,110,90,var(--grain-opacity)) 0px, transparent 1px, transparent 2px),
+      repeating-linear-gradient(90deg, rgba(120,110,90,var(--grain-opacity)) 0px, transparent 1px, transparent 2px);
+  }
+  .doc-card__eyebrow{ font-family:var(--font-mono); font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:.9rem; }
+  .doc-card__text{ font-family:var(--font-display); font-size:1.08rem; line-height:1.75; color:var(--ink); }
+  button.fact{
+    font:inherit; font-weight:500; background-color:transparent;
+    background-image:linear-gradient(transparent 58%, var(--highlight) 58%);
+    color:inherit; border:none; padding:0 2px; cursor:pointer; font-family:var(--font-display); font-size:inherit;
+    border-radius:2px;
+  }
+  button.fact:hover, button.fact:focus-visible{ background-image:linear-gradient(transparent 40%, var(--highlight) 40%); }
+  button.circled{ position:relative; font-weight:600; white-space:nowrap; background:none; border:none; cursor:pointer; font:inherit; color:inherit; font-family:var(--font-display); }
+  button.circled::before{ content:""; position:absolute; inset:-7px -11px; pointer-events:none; border:2px solid var(--stamp); border-radius:52% 48% 51% 49% / 55% 46% 54% 45%; transition:transform .2s ease; }
+  button.circled:hover::before{ transform:scale(1.06) rotate(-2deg); }
+
+  .callout{
+    position:absolute; z-index:20; background:var(--ink); color:var(--paper-card); border-radius:4px;
+    padding:.85rem 1rem; font-size:.82rem; line-height:1.5; max-width:260px; box-shadow:0 12px 26px -8px var(--shadow);
+    opacity:0; transform:translateY(6px) scale(.97); pointer-events:none; transition:opacity .15s ease, transform .15s ease;
+  }
+  .callout.is-open{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+  .callout__label{ font-family:var(--font-mono); font-size:.65rem; letter-spacing:.06em; text-transform:uppercase; color:var(--highlight); margin-bottom:.35rem; }
+  .callout__conf{ margin-top:.5rem; font-family:var(--font-mono); font-size:.68rem; color:var(--verified); }
+
+  .extract-stack{ display:flex; flex-direction:column; gap:.8rem; margin-top:1.6rem; }
+  .extract-item{ display:flex; align-items:baseline; gap:.85rem; background:var(--paper-card); border:1px solid var(--line); border-radius:3px; padding:.75rem 1rem; }
+  .extract-item__label{ font-family:var(--font-mono); font-size:.68rem; letter-spacing:.08em; color:var(--verified); flex-shrink:0; width:6.8rem; }
+  .extract-item__value{ font-size:.92rem; font-weight:600; flex:1; }
+  .extract-item__page{ margin-left:auto; font-family:var(--font-mono); font-size:.7rem; background:color-mix(in srgb, var(--line) 40%, transparent); padding:.15rem .45rem; border-radius:3px; color:var(--ink-soft); white-space:nowrap; }
+
+  /* ---------- UPLOAD DEMO ---------- */
+  .upload{ background:var(--paper-card); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .upload__grid{ display:grid; grid-template-columns:1fr 1.25fr; gap:3rem; align-items:start; }
+  @media (max-width:960px){ .upload__grid{ grid-template-columns:1fr; } }
+  
+  .status-badge{
+    display:inline-flex; align-items:center; gap:.45rem; font-family:var(--font-mono); font-size:.75rem;
+    padding:.35rem .75rem; border-radius:4px; margin-bottom:1rem; border:1px solid var(--line);
+    background:var(--paper);
+  }
+  .status-badge.online{ color:var(--verified); border-color:var(--verified); }
+  .status-badge.offline{ color:var(--stamp-deep); border-color:var(--line); }
+  .status-dot{ width:8px; height:8px; border-radius:50%; background:currentColor; }
+
+  .dropzone{ border:2px dashed var(--line); border-radius:6px; padding:3rem 1.5rem; text-align:center; cursor:pointer; transition:border-color .15s ease, background .15s ease; }
+  .dropzone.dragging, .dropzone:hover{ border-color:var(--stamp); background:color-mix(in srgb, var(--stamp) 6%, transparent); }
+  .dropzone svg{ margin:0 auto .9rem; color:var(--ink-soft); }
+  .dropzone__title{ font-weight:600; font-size:1rem; }
+  .dropzone__hint{ font-size:.85rem; color:var(--ink-soft); margin-top:.4rem; }
+  .scan-stack{ position:relative; height:4px; margin-top:1.5rem; background:var(--line); border-radius:2px; overflow:hidden; display:none; }
+  .scan-stack.active{ display:block; }
+  .scan-bar{ position:absolute; inset:0 100% 0 0; background:var(--stamp); animation:scanfill 2.6s ease forwards; }
+  @keyframes scanfill{ to{ inset:0 0 0 0; } }
+  .scan-status{ font-family:var(--font-mono); font-size:.75rem; color:var(--ink-soft); margin-top:.6rem; min-height:1.2em; }
+
+  .results{ display:flex; flex-direction:column; gap:.7rem; min-height:120px; }
+  .results .extract-item{ opacity:0; transform:translateX(8px); animation:slideIn .4s ease forwards; }
+  @keyframes slideIn{ to{ opacity:1; transform:translateX(0); } }
+  .results__placeholder{ font-size:.9rem; color:var(--ink-soft); font-style:italic; }
+  .reset-link{ font-family:var(--font-mono); font-size:.75rem; color:var(--stamp-deep); background:none; border:none; cursor:pointer; margin-top:.8rem; text-decoration:underline; padding:0; }
+
+  /* Q&A Interactive Panel */
+  .qa-box{
+    margin-top:2rem; padding:1.4rem; background:var(--paper); border:1px solid var(--line); border-radius:4px; display:none;
+  }
+  .qa-box.is-active{ display:block; animation:slideIn .4s ease forwards; }
+  .qa-box h3{ font-size:1.2rem; margin-bottom:.5rem; }
+  .qa-box p{ font-size:.88rem; color:var(--ink-soft); margin-bottom:1rem; }
+  .qa-input-row{ display:flex; gap:.6rem; }
+  .qa-input{
+    flex:1; font:inherit; font-size:.92rem; padding:.65rem .85rem; border:1px solid var(--line);
+    border-radius:3px; background:var(--paper-card); color:var(--ink);
+  }
+  .qa-input:focus{ outline:none; border-color:var(--stamp); }
+  .qa-answer{
+    margin-top:1.1rem; padding:1rem; background:var(--paper-card); border-left:3px solid var(--verified);
+    border-radius:2px; font-size:.92rem; line-height:1.6; display:none;
+  }
+  .qa-sources{ margin-top:.6rem; font-family:var(--font-mono); font-size:.75rem; color:var(--ink-soft); }
+  .qa-chip{ display:inline-block; background:color-mix(in srgb, var(--stamp) 12%, transparent); color:var(--stamp-deep); border-radius:3px; padding:.15rem .45rem; margin-right:.4rem; font-weight:600; }
+
+  /* ---------- PROCESS (accordion) ---------- */
+  .process{ background:var(--ink); color:var(--paper); }
+  .process .eyebrow{ color:var(--highlight); }
+  .process .section-head h2{ color:var(--paper-card); }
+  .accordion__item{ border-top:1px solid rgba(231,223,200,.22); }
+  .accordion__item:last-child{ border-bottom:1px solid rgba(231,223,200,.22); }
+  .accordion__head{ width:100%; display:flex; align-items:center; gap:1.2rem; background:none; border:none; color:inherit; cursor:pointer; padding:1.4rem 0; text-align:left; font-family:inherit; }
+  .accordion__num{ font-family:var(--font-mono); font-size:.85rem; color:var(--highlight); flex-shrink:0; }
+  .accordion__head h3{ font-size:1.25rem; color:var(--paper-card); flex:1; }
+  .accordion__icon{ font-family:var(--font-mono); font-size:1.1rem; color:var(--highlight); transition:transform .2s ease; }
+  .accordion__item[data-open="true"] .accordion__icon{ transform:rotate(45deg); }
+  .accordion__panel{ max-height:0; overflow:hidden; transition:max-height .25s ease; }
+  .accordion__item[data-open="true"] .accordion__panel{ max-height:200px; }
+  .accordion__panel p{ padding:0 0 1.4rem 2.2rem; color:rgba(231,223,200,.78); font-size:.98rem; line-height:1.65; max-width:52ch; }
+
+  /* ---------- FEATURES ---------- */
+  .tags{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); }
+  @media (max-width:760px){ .tags{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:480px){ .tags{ grid-template-columns:1fr; } }
+  .tag{ background:var(--paper-card); padding:1.6rem 1.5rem; cursor:default; transition:transform .15s ease; position:relative; }
+  .tag:hover{ transform:translateY(-3px) rotate(-.6deg); z-index:2; box-shadow:0 10px 18px -10px var(--shadow); }
+  .tag__label{ font-family:var(--font-mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; color:var(--stamp-deep); }
+  .tag p{ margin-top:.55rem; font-size:.94rem; color:var(--ink-soft); line-height:1.55; }
+
+  .domains__grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1.25rem; }
+  @media (max-width:900px){ .domains__grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .domains__grid{ grid-template-columns:1fr; } }
+  .domain{ border:1px solid var(--line); border-radius:4px; padding:1.6rem 1.4rem; background:var(--paper-card); }
+  .domain h3{ font-size:1.15rem; font-weight:600; }
+  .domain ul{ list-style:none; margin:.9rem 0 0; padding:0; font-size:.88rem; color:var(--ink-soft); }
+  .domain li{ padding:.3rem 0; border-top:1px solid var(--line); }
+  .domain li:first-child{ border-top:none; }
+
+  .final{ background:var(--paper-card); border-top:1px solid var(--line); border-bottom:1px solid var(--line); text-align:center; }
+  .final h2{ font-size:clamp(1.9rem,3.6vw,2.75rem); max-width:20ch; margin:0 auto; }
+  .final p{ color:var(--ink-soft); margin-top:1rem; font-size:1.05rem; }
+  .final .btn{ margin-top:2rem; }
+
+  footer{ padding:3rem 0; }
+  .footer__row{ display:flex; justify-content:space-between; gap:2rem; flex-wrap:wrap; }
+  .footer__brand{ font-family:var(--font-display); font-size:1.1rem; font-weight:600; }
+  .footer__note{ max-width:46ch; font-size:.85rem; color:var(--ink-soft); line-height:1.6; }
+  .footer__fine{ font-family:var(--font-mono); font-size:.72rem; color:var(--ink-soft); margin-top:1.5rem; }
+
+  .reveal{ opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal.is-visible{ opacity:1; transform:none; }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none !important; transition:none !important; }
+    .doc-card{ transform:rotate(-1.4deg) !important; }
+    .reveal{ opacity:1; transform:none; }
+  }
+
+  /* ---------- AUTH MODAL ---------- */
+  .signin-link{ background:none; border:none; font:inherit; font-weight:600; font-size:.9rem; color:var(--ink); cursor:pointer; padding:.4rem .2rem; }
+  .signin-link:hover{ color:var(--stamp-deep); }
+  .modal-overlay{
+    position:fixed; inset:0; z-index:100; background:color-mix(in srgb, var(--ink) 55%, transparent);
+    display:flex; align-items:center; justify-content:center; padding:1.5rem;
+    opacity:0; pointer-events:none; transition:opacity .18s ease;
+  }
+  .modal-overlay.is-open{ opacity:1; pointer-events:auto; }
+  .modal{
+    position:relative; width:100%; max-width:400px; background:var(--paper-card); border:1px solid var(--line);
+    border-radius:5px; padding:2.1rem 2rem 1.9rem; box-shadow:0 30px 60px -20px var(--shadow);
+    transform:translateY(10px) scale(.97); transition:transform .18s ease;
+  }
+  .modal-overlay.is-open .modal{ transform:translateY(0) scale(1); }
+  .modal__close{ position:absolute; top:.9rem; right:.9rem; background:none; border:none; font-size:1.2rem; line-height:1; color:var(--ink-soft); cursor:pointer; padding:.3rem; }
+  .modal__close:hover{ color:var(--ink); }
+  .modal__eyebrow{ font-family:var(--font-mono); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--stamp-deep); }
+  .modal h2{ font-size:1.5rem; margin-top:.5rem; }
+  .modal__sub{ font-size:.88rem; color:var(--ink-soft); margin-top:.4rem; }
+  .modal form{ margin-top:1.6rem; display:flex; flex-direction:column; gap:1rem; }
+  .field{ display:flex; flex-direction:column; gap:.4rem; }
+  .field label{ font-family:var(--font-mono); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
+  .field input{
+    font:inherit; font-size:.95rem; padding:.7rem .8rem; border:1px solid var(--line); border-radius:3px;
+    background:var(--paper); color:var(--ink); transition:border-color .15s ease;
+  }
+  .field input:focus{ border-color:var(--stamp); outline:none; }
+  .modal .btn--primary{ width:100%; justify-content:center; margin-top:.3rem; }
+  .modal__switch{ text-align:center; font-size:.85rem; color:var(--ink-soft); margin-top:1.3rem; }
+  .modal__switch button{ background:none; border:none; font:inherit; color:var(--stamp-deep); font-weight:600; cursor:pointer; text-decoration:underline; padding:0; }
+  .modal__note{ margin-top:1.2rem; font-family:var(--font-mono); font-size:.7rem; color:var(--ink-soft); text-align:center; }
+
+  /* ---------- DARK MODE PERFECTION & OVERRIDES ---------- */
+  :root[data-theme="dark"] .nav{
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    border-bottom-color: var(--line);
+  }
+
+  /* 1. Document Card Highlighter Fix (Image 2) */
+  :root[data-theme="dark"] button.fact{
+    background-color: var(--highlight);
+    background-image: none;
+    color: #14110e !important;
+    font-weight: 600;
+    padding: 0 4px;
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(224, 183, 63, 0.35);
+    display: inline-block;
+    line-height: 1.35;
+  }
+  :root[data-theme="dark"] button.fact:hover,
+  :root[data-theme="dark"] button.fact:focus-visible{
+    filter: brightness(1.18);
+  }
+
+  /* 2. Process / Core Loop Accordion Dark Fix (Image 1) */
+  :root[data-theme="dark"] .process{
+    background: #110e0c !important;
+    color: var(--ink) !important;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  :root[data-theme="dark"] .process .eyebrow{
+    color: var(--highlight) !important;
+  }
+  :root[data-theme="dark"] .process .section-head h2{
+    color: var(--ink) !important;
+  }
+  :root[data-theme="dark"] .accordion__head h3{
+    color: var(--ink) !important;
+  }
+  :root[data-theme="dark"] .accordion__item{
+    border-color: var(--line) !important;
+  }
+  :root[data-theme="dark"] .accordion__panel p{
+    color: var(--ink-soft) !important;
+  }
+  :root[data-theme="dark"] .accordion__num{
+    color: var(--highlight) !important;
+  }
+  :root[data-theme="dark"] .accordion__icon{
+    color: var(--highlight) !important;
+  }
+
+  /* 3. Callout Popup Dark Fix */
+  :root[data-theme="dark"] .callout{
+    background: #231f1a;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    box-shadow: 0 16px 36px -8px rgba(0,0,0,0.85);
+  }
+  :root[data-theme="dark"] .callout__label{
+    color: var(--highlight);
+  }
+  :root[data-theme="dark"] .callout__conf{
+    color: var(--verified);
+  }
+
+  /* 4. Status Badge Dark Fix */
+  :root[data-theme="dark"] .status-badge{
+    background: #191613;
+    border-color: var(--line);
+  }
+  :root[data-theme="dark"] .status-badge.online{
+    background: rgba(95, 174, 150, 0.12);
+    color: #7ad1b9;
+    border-color: #5fae96;
+  }
+  :root[data-theme="dark"] .status-badge.offline{
+    background: rgba(224, 104, 79, 0.12);
+    color: #f28b76;
+    border-color: #e0684f;
+  }
+
+  /* 5. Dropzone & Scanning */
+  :root[data-theme="dark"] .dropzone{
+    background: rgba(33, 29, 25, 0.5);
+    border-color: var(--line);
+  }
+  :root[data-theme="dark"] .dropzone.dragging,
+  :root[data-theme="dark"] .dropzone:hover{
+    border-color: var(--stamp);
+    background: rgba(224, 104, 79, 0.12);
+  }
+
+  /* 6. Extracted Items & Tags */
+  :root[data-theme="dark"] .extract-item{
+    background: #211d19;
+    border-color: var(--line);
+  }
+  :root[data-theme="dark"] .extract-item__label{
+    color: var(--verified);
+  }
+  :root[data-theme="dark"] .extract-item__value{
+    color: var(--ink);
+  }
+  :root[data-theme="dark"] .extract-item__page{
+    background: rgba(238, 230, 211, 0.08);
+    color: var(--ink-soft);
+    border: 1px solid rgba(238, 230, 211, 0.1);
+  }
+
+  /* 7. Q&A Box */
+  :root[data-theme="dark"] .qa-box{
+    background: #191613;
+    border-color: var(--line);
+  }
+  :root[data-theme="dark"] .qa-input{
+    background: #25201b;
+    border-color: var(--line);
+    color: var(--ink);
+  }
+  :root[data-theme="dark"] .qa-answer{
+    background: #221d18;
+    border-left-color: var(--verified);
+    color: var(--ink);
+  }
+  :root[data-theme="dark"] .qa-chip{
+    background: rgba(224, 104, 79, 0.22);
+    color: #fca08d;
+  }
+
+  /* 8. Feature Cards & Domains */
+  :root[data-theme="dark"] .tag{
+    background: #211d19;
+  }
+  :root[data-theme="dark"] .tag:hover{
+    background: #28231d;
+    box-shadow: 0 12px 24px -10px rgba(0,0,0,0.85);
+  }
+  :root[data-theme="dark"] .domain{
+    background: #211d19;
+    border-color: var(--line);
+  }
+  :root[data-theme="dark"] .domain li{
+    border-color: var(--line);
+  }
+
+  /* 9. Buttons & Modal */
+  :root[data-theme="dark"] .btn--primary{
+    color: #12100e;
+    font-weight: 700;
+  }
+  :root[data-theme="dark"] .modal{
+    background: #211d19;
+    border-color: var(--line);
+  }
+  :root[data-theme="dark"] .field input{
+    background: #181512;
+    border-color: var(--line);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav__row">
+    <a class="brand" href="#top">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 2H15L19 6V22H5V2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M15 2V6H19" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="7.5" y="11" width="7" height="2.5" fill="#f0c743"/>
+        <line x1="7.5" y1="16" x2="14.5" y2="16" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+      DocIntel AI
+    </a>
+    <ul class="nav__links">
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#features">What it finds</a></li>
+      <li><a href="#domains">Built for</a></li>
+    </ul>
+    <div class="nav__cta">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span id="themeIcon">☾</span><span id="themeLabel">Dark</span>
+      </button>
+      <button class="signin-link" id="signinBtn">Sign in</button>
+      <a class="btn btn--primary" href="#try-it">Try it</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero__grid">
+    <div>
+      <p class="eyebrow">AI Document Intelligence</p>
+      <h1>Turn dense paperwork into decisions you can act on.</h1>
+      <p class="hero__sub">Upload a government form, insurance policy, loan agreement, or legal notice. Get a plain-language summary, every deadline and fee called out, and answers to your questions — each one traced back to the exact page it came from.</p>
+      <div class="hero__ctas">
+        <a class="btn btn--primary" href="#try-it">See how it works</a>
+        <a class="btn btn--ghost" href="#features">What it extracts</a>
+      </div>
+    </div>
+
+    <div class="doc-wrap" id="docWrap">
+      <div class="doc-card" id="docCard">
+        <p class="doc-card__eyebrow">Scholarship Program — Notice to Applicants</p>
+        <p class="doc-card__text">
+          Applicants must have a <button class="fact" data-fact="income">family income below ₹2,50,000 per annum</button> and be <button class="fact" data-fact="enrollment">currently enrolled in a recognized undergraduate program</button>. Completed applications, along with income and enrollment certificates, must be submitted no later than <button class="circled" data-fact="deadline">15 March 2026</button>. A non-refundable processing fee of <button class="circled" data-fact="fee">₹500</button> applies to all submissions received after the initial verification round.
+        </p>
+      </div>
+      <div class="callout" id="callout">
+        <div class="callout__label" id="calloutLabel">FIELD</div>
+        <div id="calloutBody"></div>
+        <div class="callout__conf" id="calloutConf"></div>
+      </div>
+
+      <div class="extract-stack">
+        <div class="extract-item"><span class="extract-item__label">ELIGIBLE IF</span><span class="extract-item__value">Family income under ₹2,50,000/yr</span></div>
+        <div class="extract-item"><span class="extract-item__label">DEADLINE</span><span class="extract-item__value">15 March 2026</span></div>
+        <div class="extract-item"><span class="extract-item__label">FEE</span><span class="extract-item__value">₹500 (late submissions)</span></div>
+        <div class="extract-item"><span class="extract-item__label">SOURCE</span><span class="extract-item__value">Page 2</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="upload section" id="try-it">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Try it yourself</p>
+      <h2>Drop in a document, watch it get read</h2>
+    </div>
+    
+    <!-- Backend Connection Indicator -->
+    <div id="statusBadge" class="status-badge offline">
+      <span class="status-dot"></span>
+      <span id="statusText">Checking backend on http://localhost:8000…</span>
+    </div>
+
+    <div class="upload__grid reveal">
+      <div>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload a document">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4M12 4L7 9M12 4l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <p class="dropzone__title" id="dropzoneTitle">Drop a PDF or click to select</p>
+          <p class="dropzone__hint" id="dropzoneHint">Upload any PDF (max 20MB) to extract intelligence & search</p>
+          <input type="file" id="fileInput" accept=".pdf" style="display:none">
+        </div>
+        <div class="scan-stack" id="scanStack"><div class="scan-bar"></div></div>
+        <p class="scan-status" id="scanStatus"></p>
+        <button class="reset-link" id="resetBtn" style="display:none;">Upload another document</button>
+      </div>
+      <div>
+        <div class="results" id="results">
+          <p class="results__placeholder">Extracted facts and grounded sources will appear here.</p>
+        </div>
+
+        <!-- Interactive RAG Q&A Container -->
+        <div class="qa-box" id="qaBox">
+          <h3>Ask this document anything</h3>
+          <p>Answers are generated strictly from the document's verified text chunks with source page citations.</p>
+          <div class="qa-input-row">
+            <input type="text" class="qa-input" id="qaInput" placeholder="e.g. What are the eligibility criteria and deadline?">
+            <button class="btn btn--primary" id="qaSubmitBtn">Ask</button>
+          </div>
+          <div class="qa-answer" id="qaAnswer">
+            <div id="qaAnswerText"></div>
+            <div class="qa-sources" id="qaSources"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="process" id="how-it-works">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">The core loop</p>
+      <h2>Understand, verify, act — in that order.</h2>
+    </div>
+    <div class="reveal" id="accordion">
+      <div class="accordion__item" data-open="true">
+        <button class="accordion__head"><span class="accordion__num">01</span><h3>Understand</h3><span class="accordion__icon">+</span></button>
+        <div class="accordion__panel"><p>A plain-language summary of what the document is, what type it is, and what it means for you — no legal dictionary required.</p></div>
+      </div>
+      <div class="accordion__item" data-open="false">
+        <button class="accordion__head"><span class="accordion__num">02</span><h3>Verify</h3><span class="accordion__icon">+</span></button>
+        <div class="accordion__panel"><p>Every answer is grounded in your document. Click any fact to jump straight to the page it came from.</p></div>
+      </div>
+      <div class="accordion__item" data-open="false">
+        <button class="accordion__head"><span class="accordion__num">03</span><h3>Act</h3><span class="accordion__icon">+</span></button>
+        <div class="accordion__panel"><p>Deadlines, fees, and required documents become a checklist instead of a scavenger hunt.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Every upload, the same breakdown</p>
+      <h2>What comes out the other side</h2>
+    </div>
+    <div class="tags reveal">
+      <div class="tag"><p class="tag__label">Document type</p><p>What kind of document this is, identified automatically.</p></div>
+      <div class="tag"><p class="tag__label">Summary</p><p>What it says, in plain language.</p></div>
+      <div class="tag"><p class="tag__label">Eligibility</p><p>Who qualifies, and under what conditions.</p></div>
+      <div class="tag"><p class="tag__label">Deadlines</p><p>Every date that matters, called out on its own.</p></div>
+      <div class="tag"><p class="tag__label">Fees</p><p>Amounts, what they're for, and when they apply.</p></div>
+      <div class="tag"><p class="tag__label">Required documents</p><p>Exactly what you need to gather before you apply.</p></div>
+      <div class="tag"><p class="tag__label">Important clauses</p><p>Restrictions, penalties, and renewal conditions, explained.</p></div>
+      <div class="tag"><p class="tag__label">Recommended actions</p><p>A checklist of what to do next, and why.</p></div>
+      <div class="tag"><p class="tag__label">Potential risks</p><p>What could go wrong if a condition is missed.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="domains" style="padding-top:0;">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Built for</p>
+      <h2>The paperwork that actually confuses people</h2>
+    </div>
+    <div class="domains__grid reveal">
+      <div class="domain"><h3>Government</h3><ul><li>Eligibility</li><li>Application dates</li><li>Required documents</li><li>Benefits</li><li>Fees</li></ul></div>
+      <div class="domain"><h3>Insurance</h3><ul><li>Premiums</li><li>Coverage</li><li>Exclusions</li><li>Claim requirements</li><li>Waiting periods</li></ul></div>
+      <div class="domain"><h3>Financial</h3><ul><li>Interest rates</li><li>Fees</li><li>Payment dates</li><li>Penalties</li><li>Terms</li></ul></div>
+      <div class="domain"><h3>Legal</h3><ul><li>Parties</li><li>Obligations</li><li>Deadlines</li><li>Termination conditions</li><li>Definitions</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="final" id="final-cta">
+  <div class="container section reveal">
+    <h2>Stop re-reading the fine print.</h2>
+    <p>One upload gets you a summary, a checklist, and an answer to whatever you're trying to figure out.</p>
+    <a class="btn btn--primary" href="#try-it">Get started</a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer__row">
+      <div class="footer__brand">DocIntel AI</div>
+      <p class="footer__note">DocIntel AI is an information-assistance tool, not legal, financial, insurance, or government advice. Always verify important decisions against the original document.</p>
+    </div>
+    <p class="footer__fine">© 2026 DocIntel AI · Created by Rohan Gopal</p>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal__close" id="modalClose" aria-label="Close">✕</button>
+    <p class="modal__eyebrow">Account access</p>
+    <h2 id="modalTitle">Sign in</h2>
+    <p class="modal__sub" id="modalSub">Enter your details to pick up where you left off.</p>
+    <form id="authForm">
+      <div class="field" id="nameField" style="display:none;">
+        <label for="authName">Name</label>
+        <input type="text" id="authName" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input type="email" id="authEmail" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="authPass">Password</label>
+        <input type="password" id="authPass" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn--primary" id="authSubmit">Sign in</button>
+    </form>
+    <p class="modal__switch">
+      <span id="switchPrompt">Don't have an account?</span>
+      <button type="button" id="switchBtn">Create one</button>
+    </p>
+    <p class="modal__note">Demo only — no data is sent or stored.</p>
+  </div>
+</div>
+
+<script>
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // reveal on scroll
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else { revealEls.forEach(function (el) { el.classList.add('is-visible'); }); }
+
+  // theme toggle with persistent storage
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+  var icon = document.getElementById('themeIcon');
+  var label = document.getElementById('themeLabel');
+  function applyTheme(t){
+    root.setAttribute('data-theme', t);
+    icon.textContent = t === 'dark' ? '☀' : '☾';
+    label.textContent = t === 'dark' ? 'Light' : 'Dark';
+    try { localStorage.setItem('docintel_theme', t); } catch(e){}
+  }
+  var savedTheme = null;
+  try { savedTheme = localStorage.getItem('docintel_theme'); } catch(e){}
+  if (savedTheme === 'dark' || savedTheme === 'light') {
+    applyTheme(savedTheme);
+  } else {
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDark ? 'dark' : 'light');
+  }
+  toggle.addEventListener('click', function(){
+    var current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  // 3D tilt on doc-card
+  var docWrap = document.getElementById('docWrap');
+  var docCard = document.getElementById('docCard');
+  if (!reduceMotion && docWrap && docCard) {
+    docWrap.addEventListener('mousemove', function(e){
+      var r = docWrap.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width - 0.5;
+      var py = (e.clientY - r.top) / r.height - 0.5;
+      docCard.style.transform = 'rotate(-1.4deg) rotateX(' + (py * -8) + 'deg) rotateY(' + (px * 10) + 'deg)';
+    });
+    docWrap.addEventListener('mouseleave', function(){ docCard.style.transform = 'rotate(-1.4deg)'; });
+  }
+
+  // fact callouts in sample card
+  var facts = {
+    income: { label: 'ELIGIBILITY', body: 'Extracted from paragraph 1: household income must fall under this threshold.', conf: '98% confidence · Page 2' },
+    enrollment: { label: 'ELIGIBILITY', body: 'Applicant status requirement, cross-checked against enrollment certificate wording.', conf: '95% confidence · Page 2' },
+    deadline: { label: 'DEADLINE', body: 'Final submission date. Applications after this are not accepted.', conf: '99% confidence · Page 2' },
+    fee: { label: 'FEE', body: 'Only charged for late-round submissions, per the fee schedule on the same page.', conf: '97% confidence · Page 3' }
+  };
+  var callout = document.getElementById('callout');
+  var calloutLabel = document.getElementById('calloutLabel');
+  var calloutBody = document.getElementById('calloutBody');
+  var calloutConf = document.getElementById('calloutConf');
+  document.querySelectorAll('button.fact, button.circled').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var f = facts[btn.dataset.fact];
+      if (!f) return;
+      calloutLabel.textContent = f.label;
+      calloutBody.textContent = f.body;
+      calloutConf.textContent = f.conf;
+      var wrapRect = docWrap.getBoundingClientRect();
+      var btnRect = btn.getBoundingClientRect();
+      var top = btnRect.bottom - wrapRect.top + 10;
+      var left = Math.min(Math.max(btnRect.left - wrapRect.left, 0), wrapRect.width - 260);
+      callout.style.top = top + 'px';
+      callout.style.left = left + 'px';
+      callout.classList.add('is-open');
+    });
+  });
+  document.addEventListener('click', function(){ if (callout) callout.classList.remove('is-open'); });
+
+  // accordion
+  document.querySelectorAll('.accordion__head').forEach(function(head){
+    head.addEventListener('click', function(){
+      var item = head.parentElement;
+      var isOpen = item.getAttribute('data-open') === 'true';
+      document.querySelectorAll('.accordion__item').forEach(function(i){ i.setAttribute('data-open', 'false'); });
+      item.setAttribute('data-open', isOpen ? 'false' : 'true');
+    });
+  });
+
+  // Dynamic API Base Detection (tests current origin, 127.0.0.1, and localhost)
+  var API_BASE = (window.location.origin && (window.location.origin.includes(':8000') || window.location.origin.includes(':5173')))
+    ? (window.location.origin.includes(':8000') ? window.location.origin : 'http://localhost:8000')
+    : 'http://localhost:8000';
+
+  var isBackendOnline = false;
+  var statusBadge = document.getElementById('statusBadge');
+  var statusText = document.getElementById('statusText');
+
+  async function checkBackendHealth() {
+    var endpoints = [API_BASE, 'http://127.0.0.1:8000', 'http://localhost:8000'];
+    for (var i = 0; i < endpoints.length; i++) {
+      var ep = endpoints[i];
+      try {
+        var controller = new AbortController();
+        var tId = setTimeout(function(){ controller.abort(); }, 1500);
+        var res = await fetch(ep + '/api/status', { method: 'GET', signal: controller.signal });
+        clearTimeout(tId);
+        if (res.ok) {
+          var data = await res.json();
+          API_BASE = ep;
+          isBackendOnline = true;
+          statusBadge.className = 'status-badge online';
+          var keyMsg = data.openai_configured ? 'OpenAI Connected' : 'Set OPENAI_API_KEY in .env';
+          statusText.innerHTML = '● FastAPI Backend Online (' + keyMsg + ')';
+          return;
+        }
+      } catch(e) {}
+    }
+    isBackendOnline = false;
+    statusBadge.className = 'status-badge offline';
+    statusText.innerHTML = '○ Backend Offline &bull; In-browser PDF extractor ready &bull; To enable AI: <code>uvicorn backend.main:app --reload</code>';
+  }
+  checkBackendHealth();
+  setInterval(checkBackendHealth, 5000);
+
+  // Upload & Extraction Management
+  var dropzone = document.getElementById('dropzone');
+  var fileInput = document.getElementById('fileInput');
+  var scanStack = document.getElementById('scanStack');
+  var scanStatus = document.getElementById('scanStatus');
+  var results = document.getElementById('results');
+  var resetBtn = document.getElementById('resetBtn');
+  var qaBox = document.getElementById('qaBox');
+  var qaInput = document.getElementById('qaInput');
+  var qaSubmitBtn = document.getElementById('qaSubmitBtn');
+  var qaAnswer = document.getElementById('qaAnswer');
+  var qaAnswerText = document.getElementById('qaAnswerText');
+  var qaSources = document.getElementById('qaSources');
+
+  var currentDocumentId = null;
+  var localExtractedPages = []; // [{page: int, text: str}]
+
+  function renderResultItem(label, value, page) {
+    var row = document.createElement('div');
+    row.className = 'extract-item';
+    var pageHtml = page ? '<span class="extract-item__page">Page ' + page + '</span>' : '';
+    row.innerHTML = '<span class="extract-item__label">' + label + '</span><span class="extract-item__value">' + value + '</span>' + pageHtml;
+    results.appendChild(row);
+  }
+
+  // Client-Side PDF Parsing Engine (for offline or instantaneous local verification)
+  async function parsePdfInBrowser(file) {
+    if (typeof pdfjsLib !== 'undefined') {
+      var arrayBuffer = await file.arrayBuffer();
+      var pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      var pages = [];
+      for (var i = 1; i <= pdf.numPages; i++) {
+        var p = await pdf.getPage(i);
+        var textContent = await p.getTextContent();
+        var pageText = textContent.items.map(function(item){ return item.str; }).join(' ').trim();
+        pages.push({ page: i, text: pageText });
+      }
+      return pages;
+    }
+    // Fallback: Read raw strings if CDN is blocked
+    var text = await file.text().catch(function(){ return ''; });
+    var clean = text.replace(/[^a-zA-Z0-9\s.,₹$%@/:-]/g, ' ').replace(/\s+/g, ' ').trim();
+    return [{ page: 1, text: clean.slice(0, 3000) || 'Uploaded document ' + file.name }];
+  }
+
+  function extractLocalFacts(pages, fileName) {
+    var items = [];
+    var firstPage = (pages[0] && pages[0].text) ? pages[0].text : '';
+    var docType = 'PDF Document (' + fileName + ')';
+    if (/policy|insurance|premium/i.test(firstPage)) docType = 'Insurance Policy';
+    else if (/scholarship|applicant|income/i.test(firstPage)) docType = 'Scholarship Notice';
+    else if (/agreement|contract|lease|tenant/i.test(firstPage)) docType = 'Legal Agreement';
+    else if (/loan|interest|repayment|emi/i.test(firstPage)) docType = 'Financial Agreement';
+    items.push({ label: 'DOC TYPE', value: docType, page: 1 });
+
+    var summaryText = firstPage.slice(0, 180).trim();
+    if (summaryText.length > 25) {
+      items.push({ label: 'SUMMARY', value: summaryText + '…', page: 1 });
+    }
+
+    // Deadlines
+    pages.forEach(function(p){
+      var dateMatches = p.text.match(/\b(?:\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})\b/gi);
+      if (dateMatches) {
+        dateMatches.slice(0, 2).forEach(function(d){
+          items.push({ label: 'DEADLINE', value: 'Submission date: ' + d, page: p.page });
+        });
+      }
+    });
+
+    // Fees & Currency
+    pages.forEach(function(p){
+      var feeMatches = p.text.match(/(?:₹|Rs\.?|\$|USD|EUR|€)\s?[\d,]+(?:\.\d{2})?/gi);
+      if (feeMatches) {
+        feeMatches.slice(0, 2).forEach(function(f){
+          items.push({ label: 'FEE / AMOUNT', value: f, page: p.page });
+        });
+      }
+    });
+
+    // Eligibility or Requirements
+    pages.forEach(function(p){
+      var reqMatches = p.text.match(/(?:must have|eligible if|requirement|required to)[^.\n]{10,90}/gi);
+      if (reqMatches) {
+        reqMatches.slice(0, 2).forEach(function(r){
+          items.push({ label: 'REQUIREMENT', value: r.trim(), page: p.page });
+        });
+      }
+    });
+
+    if (items.length <= 2) {
+      items.push({ label: 'INFO', value: 'Extracted ' + pages.length + ' page(s) from ' + fileName, page: 1 });
+    }
+
+    return items;
+  }
+
+  async function handleRealUpload(file) {
+    dropzone.style.pointerEvents = 'none';
+    scanStack.classList.add('active');
+    results.innerHTML = '';
+    resetBtn.style.display = 'none';
+    qaBox.classList.remove('is-active');
+    qaAnswer.style.display = 'none';
+    currentDocumentId = null;
+
+    scanStatus.textContent = 'Analyzing ' + file.name + '…';
+
+    var backendSuccess = false;
+
+    // Always attempt FastAPI backend first
+    try {
+      scanStatus.textContent = 'Uploading to DocIntel FastAPI backend…';
+      var formData = new FormData();
+      formData.append('file', file);
+
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function(){ controller.abort(); }, 5000);
+
+      var resp = await fetch(API_BASE + '/upload', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (resp.ok) {
+        var data = await resp.json();
+        currentDocumentId = data.document_id;
+        isBackendOnline = true;
+        scanStatus.textContent = 'Extraction complete (' + data.pages + ' pages indexed by FAISS).';
+
+        var a = data.analysis || {};
+        if (a.document_type) renderResultItem('DOC TYPE', a.document_type);
+        if (a.summary) renderResultItem('SUMMARY', a.summary);
+        if (Array.isArray(a.deadlines)) {
+          a.deadlines.forEach(function(d){ renderResultItem('DEADLINE', d.date + ' — ' + d.description, d.page); });
+        }
+        if (Array.isArray(a.fees)) {
+          a.fees.forEach(function(f){ renderResultItem('FEE', f.amount + ' (' + f.description + ')', f.page); });
+        }
+        if (Array.isArray(a.eligibility)) {
+          a.eligibility.forEach(function(e){ renderResultItem('ELIGIBILITY', e.requirement, e.page); });
+        }
+        if (Array.isArray(a.required_documents)) {
+          a.required_documents.forEach(function(rd){ renderResultItem('REQUIRED DOC', rd.document, rd.page); });
+        }
+        if (Array.isArray(a.important_clauses)) {
+          a.important_clauses.forEach(function(c){ renderResultItem('CLAUSE', c.clause + ': ' + c.explanation, c.page); });
+        }
+        if (Array.isArray(a.recommended_actions)) {
+          a.recommended_actions.forEach(function(act){ renderResultItem('ACTION', act.action + ' (' + act.reason + ')', act.page); });
+        }
+        if (Array.isArray(a.potential_risks)) {
+          a.potential_risks.forEach(function(r){ renderResultItem('RISK', r.risk + ' — ' + r.explanation, r.page); });
+        }
+
+        qaBox.classList.add('is-active');
+        resetBtn.style.display = 'inline-block';
+        dropzone.style.pointerEvents = '';
+        backendSuccess = true;
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend unavailable or timed out, switching to in-browser engine:', err);
+    }
+
+    // In-Browser Client-Side Engine Fallback
+    try {
+      scanStatus.textContent = 'Reading PDF text directly from document pages…';
+      localExtractedPages = await parsePdfInBrowser(file);
+      scanStatus.textContent = 'Extracted ' + localExtractedPages.length + ' page(s) successfully.';
+
+      var localFacts = extractLocalFacts(localExtractedPages, file.name);
+      localFacts.forEach(function(f){
+        renderResultItem(f.label, f.value, f.page);
+      });
+
+      qaBox.classList.add('is-active');
+      resetBtn.style.display = 'inline-block';
+      dropzone.style.pointerEvents = '';
+    } catch (parseErr) {
+      console.error('PDF parsing error:', parseErr);
+      scanStatus.textContent = 'Could not parse PDF. Please verify file is a valid PDF.';
+      resetBtn.style.display = 'inline-block';
+      dropzone.style.pointerEvents = '';
+    }
+  }
+
+  // Ask Question Handler
+  async function handleAskQuestion() {
+    var q = qaInput.value.trim();
+    if (!q) return;
+
+    qaSubmitBtn.disabled = true;
+    qaSubmitBtn.textContent = 'Searching…';
+    qaAnswer.style.display = 'block';
+    qaAnswerText.innerHTML = '<em>Searching document context and verifying citations…</em>';
+    qaSources.innerHTML = '';
+
+    // If backend is active and document is on server
+    if (currentDocumentId) {
+      try {
+        var resp = await fetch(API_BASE + '/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ document_id: currentDocumentId, question: q })
+        });
+        if (resp.ok) {
+          var ansData = await resp.json();
+          qaAnswerText.textContent = ansData.answer;
+          if (ansData.sources && ansData.sources.length) {
+            var sourceTags = ansData.sources.map(function(s){
+              return '<span class="qa-chip">Page ' + s.page + '</span> ' + (s.reason || '');
+            }).join('<br>');
+            qaSources.innerHTML = '<strong>Verified Citations:</strong><br>' + sourceTags;
+          } else {
+            qaSources.innerHTML = '<em>No direct citation sources identified.</em>';
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn('Backend Q&A error, falling back to local search:', e);
+      } finally {
+        qaSubmitBtn.disabled = false;
+        qaSubmitBtn.textContent = 'Ask';
+      }
+    }
+
+    // Client-side grounded search across extracted pages
+    setTimeout(function(){
+      qaSubmitBtn.disabled = false;
+      qaSubmitBtn.textContent = 'Ask';
+
+      if (!localExtractedPages || !localExtractedPages.length) {
+        qaAnswerText.textContent = "Please upload a document to ask questions.";
+        return;
+      }
+
+      var qWords = q.toLowerCase().split(/\s+/).filter(function(w){ return w.length > 2; });
+      var scoredPages = localExtractedPages.map(function(p){
+        var score = 0;
+        var pLower = p.text.toLowerCase();
+        qWords.forEach(function(w){
+          if (pLower.includes(w)) score += 1;
+        });
+        return { page: p.page, text: p.text, score: score };
+      });
+
+      scoredPages.sort(function(a, b){ return b.score - a.score; });
+      var best = scoredPages[0];
+
+      if (best && best.score > 0) {
+        var sentences = best.text.split(/(?<=[.?!])\s+/);
+        var matchingSentence = sentences.find(function(s){
+          return qWords.some(function(w){ return s.toLowerCase().includes(w); });
+        }) || sentences.slice(0, 2).join(' ');
+
+        qaAnswerText.textContent = matchingSentence;
+        qaSources.innerHTML = '<span class="qa-chip">Page ' + best.page + '</span> Verified from document content';
+      } else {
+        qaAnswerText.textContent = "I couldn't find information matching '" + q + "' in the uploaded document.";
+        qaSources.innerHTML = '<em>No direct matches found.</em>';
+      }
+    }, 350);
+  }
+
+  if (qaSubmitBtn && qaInput) {
+    qaSubmitBtn.addEventListener('click', handleAskQuestion);
+    qaInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') handleAskQuestion(); });
+  }
+
+  dropzone.addEventListener('click', function(){ fileInput.click(); });
+  dropzone.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { fileInput.click(); } });
+  fileInput.addEventListener('change', function(){
+    if (fileInput.files.length) handleRealUpload(fileInput.files[0]);
+  });
+  ['dragover','dragenter'].forEach(function(ev){
+    dropzone.addEventListener(ev, function(e){ e.preventDefault(); dropzone.classList.add('dragging'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    dropzone.addEventListener(ev, function(e){ e.preventDefault(); dropzone.classList.remove('dragging'); });
+  });
+  dropzone.addEventListener('drop', function(e){
+    e.preventDefault();
+    dropzone.classList.remove('dragging');
+    if (e.dataTransfer.files.length) handleRealUpload(e.dataTransfer.files[0]);
+  });
+
+  resetBtn.addEventListener('click', function(){
+    scanStack.classList.remove('active');
+    scanStatus.textContent = '';
+    results.innerHTML = '<p class="results__placeholder">Extracted facts and grounded sources will appear here.</p>';
+    resetBtn.style.display = 'none';
+    qaBox.classList.remove('is-active');
+    qaAnswer.style.display = 'none';
+    qaInput.value = '';
+    currentDocumentId = null;
+    localExtractedPages = [];
+    fileInput.value = '';
+  });
+
+  // auth modal
+  var overlay = document.getElementById('modalOverlay');
+  var signinBtn = document.getElementById('signinBtn');
+  var modalClose = document.getElementById('modalClose');
+  var modalTitle = document.getElementById('modalTitle');
+  var modalSub = document.getElementById('modalSub');
+  var nameField = document.getElementById('nameField');
+  var authName = document.getElementById('authName');
+  var authSubmit = document.getElementById('authSubmit');
+  var switchPrompt = document.getElementById('switchPrompt');
+  var switchBtn = document.getElementById('switchBtn');
+  var authForm = document.getElementById('authForm');
+  var mode = 'signin';
+  var lastFocused = null;
+
+  function setMode(m){
+    mode = m;
+    if (m === 'signin') {
+      modalTitle.textContent = 'Sign in';
+      modalSub.textContent = 'Enter your details to pick up where you left off.';
+      nameField.style.display = 'none';
+      authName.removeAttribute('required');
+      authSubmit.textContent = 'Sign in';
+      switchPrompt.textContent = "Don't have an account?";
+      switchBtn.textContent = 'Create one';
+    } else {
+      modalTitle.textContent = 'Create account';
+      modalSub.textContent = 'Set up access to save documents and past answers.';
+      nameField.style.display = 'flex';
+      authName.setAttribute('required', 'required');
+      authSubmit.textContent = 'Create account';
+      switchPrompt.textContent = 'Already have an account?';
+      switchBtn.textContent = 'Sign in';
+    }
+  }
+  function openModal(){
+    lastFocused = document.activeElement;
+    overlay.classList.add('is-open');
+    setTimeout(function(){ document.getElementById('authEmail').focus(); }, 50);
+  }
+  function closeModal(){
+    overlay.classList.remove('is-open');
+    if (lastFocused) lastFocused.focus();
+  }
+  signinBtn.addEventListener('click', function(){ setMode('signin'); openModal(); });
+  modalClose.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+  switchBtn.addEventListener('click', function(){ setMode(mode === 'signin' ? 'signup' : 'signin'); });
+  authForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    authSubmit.textContent = mode === 'signin' ? 'Signed in ✓' : 'Account created ✓';
+    setTimeout(closeModal, 700);
+  });
+</script>
+</body>
+</html>
