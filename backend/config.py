@@ -30,9 +30,12 @@ OPENAI_EMBEDDING_MODEL: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embeddin
 CHAT_MODEL: str = OPENAI_CHAT_MODEL
 EMBEDDING_MODEL: str = OPENAI_EMBEDDING_MODEL
 
-# Validate that OPENAI_API_KEY is present
+# Validate OPENAI_API_KEY: if missing in environment, default to placeholder
+# so the application can boot and serve the web UI gracefully
 if not OPENAI_API_KEY:
-    raise RuntimeError(
-        "OPENAI_API_KEY is missing. Please provide a valid OpenAI API key in your .env file "
-        "or environment variables (e.g., OPENAI_API_KEY=sk-...)."
+    import logging
+    logging.getLogger("docintel.config").warning(
+        "OPENAI_API_KEY is missing. Defaulting to placeholder. "
+        "Add OPENAI_API_KEY in Render Environment Variables or .env to enable live AI."
     )
+    OPENAI_API_KEY = "your_api_key_here"
